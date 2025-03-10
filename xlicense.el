@@ -89,15 +89,29 @@ CDR of each item is a filename of the license template")
   "Description: "
   "Short description of what it does.")
 
+(defvar license-copyright-notice-function (lambda ()
+                                            (insert (format "Copyright (C) %d, %s" (nth 5 (decode-time)) auth))
+                                            (if license-user-mail-address
+                                                (insert (format " <%s>" license-user-mail-address))))
+  "Function to insert the copyright notice.")
+
+(defvar license-copyright-notice-position 'before
+  "Indicates the position of the copyright notice relative to text of the license.  Valid values are 'before or 'after.")
+
+(defvar license-choice nil
+  "If non-nil, always use this license instead of prompting.")
+
 (defvar license-eol-text "!@#$EOL!@#$"
   "Text to mark blank lines -- used internally")
 
 (defun license-file (type)
-  "Return the pathname of the given license file"
+  "Return the path of the given license file"
   (let ((tp (assoc type license-types)))
-    (if tp
-        (concat (file-name-as-directory license-directory) (cdr tp))
-      tp)))
+    (when tp
+      (dolist (dir license-template-directories)
+        (let ((file (expand-file-name (cdr tp) (file-name-as-directory dir))))
+          (when (file-exists-p file)
+            (return file)))))))
 
 (defvar license-keywords-alist '(("@author@" . license-user-full-name)
                                  ("@email@" . license-user-mail-address)
@@ -112,9 +126,8 @@ CDR of an item is a function, the return value(string) is used as
 a replacement.  If the returned value is nil, no substitution for
 that keyword.")
 
-
 (defun license-substitute-keywords (&optional record)
-  "Substitute all occurences of keywords to their replacement and returns 
+  "Substitute all occurences of keywords to their replacement and returns
 the replacement positions in markers."
   (let (markers)
     (dolist (i license-keywords-alist)
@@ -134,7 +147,6 @@ the replacement positions in markers."
   (dolist (i lst)
     (goto-char i)
     (fill-paragraph)))
-
 
 (defun create-license (type &optional comments summary author)
   "Create a license paragraphs according to current buffer's major mode.
@@ -212,46 +224,19 @@ See `license-keywords-alist' for keywords and their meaning."
 
         (license-fill-paragraphs markers)
 
-        ;;(print markers)
-        ;;(pop-marker)
+        ;; (print markers)
+        ;; (pop-marker)
         (goto-char (point-max))
         (insert "\n"))
       (buffer-substring-no-properties (point-min) (point-max)))))
 
-
 (defun insert-license (&optional type)
-  "Insert a license template into the current buffer." 
-  (interactive)
-  (let ((text (create-license
-               (or type (intern (completing-read "Choose a license type: "
-                                                 license-types nil t))) t)))
-    (if (called-interactively-p 'any)
-        (insert text)
-      text)))
-
-
-(define-skeleton license-skeleton
   "Insert a license template into the current buffer."
-  ""
-  (insert-license)
-  "\n"
-  _)
-
-
-(define-skeleton gpl-interactive-skeleton
-  "Insert an Interactive GPL banner."
-  ""
-  \n > "static const char *gpl_banner[] = {" \n
-  > "\"" (file-name-nondirectory (file-name-sans-extension buffer-file-name))
-  > " version XXX, Copyright (C) "
-  (substring (current-time-string) -4) " " (user-full-name) "\"," \n
-  > "\"" (file-name-nondirectory (file-name-sans-extension buffer-file-name))
-  "comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\"," \n
-  "\"This is free software, and you are welcome to redistribute it\"," \n
-  "\"under certain conditions; type `show c' for details.\"," \n
-  > > "};" \n
-  > _)
-
+  (interactive (list license-choice))
+  (let ((text (create-license
+               (or type license-choice (intern (completing-read "Choose a license type: " license-types nil t)))
+               t)))
+    (insert text)))
 
 (provide 'xlicense)
-;;; license.el ends here
+;;; xlicense.el ends here

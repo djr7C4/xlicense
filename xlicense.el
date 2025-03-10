@@ -147,24 +147,53 @@ If AUTHOR is non-nil, all occurrence of the author keyword are
 replaced to AUTHOR.
 
 See `license-keywords-alist' for keywords and their meaning."
-  (let (;(buffer (get-buffer-create "*LICENSE*"))
-        (desc (or (and summary (> (length summary) 0))
+  (let ((desc (or (and summary (> (length summary) 0))
                   license-default-summary))
-        (auth (or author (user-full-name)))
+        (auth (or author license-user-full-name))
+        (newlines t)
         (lfile (license-file type))
         (mode major-mode)
-        (fill-points nil))
+        (fill-points nil)
+        ;; This is an ugly kludge that should be replaced with something better
+        ;; but it works for now. Removing it would require significantly
+        ;; refactoring this function.
+        (local-vars (mapcar (lambda (entry)
+                              ;; Ignore the 'eval variable. This isn't really
+                              ;; correct behavior but it works well enough... An
+                              ;; alternative would be to use
+                              ;; (buffer-local-variables) instead of
+                              ;; file-local-variables-alist but that is slow.
+                              (if (eq (car entry) 'eval)
+                                  (cons nil nil)
+                                (cons (car entry)
+                                      (symbol-value (car entry)))))
+                            file-local-variables-alist)))
+    (unless lfile
+      (user-error "License file for %s not found" type))
     (with-temp-buffer
-      ;; BEGIN Common
-      (insert "\n")
-      (insert (format "Author:: %s" auth))
-      (if user-mail-address
-          (insert (format " <%s>" user-mail-address)))
-      (insert "\n")
-      (insert (format "Copyright:: Copyright (c) %d, %s" (nth 5 (decode-time)) auth))
-      (insert "\n")
-      ;; END Common
-      (insert-file-contents lfile)
+      ;; Restore file local variables from the buffer this was run in.
+      (loop
+       for (var . value) in local-vars
+       do (when var
+            (make-local-variable var)
+            (set var value)))
+      (when (eq license-copyright-notice-position 'before)
+        (funcall license-copyright-notice-function)
+        (insert "\n\n"))
+
+      (let ((point (point-max)))
+        (insert-file-contents lfile)
+        (when (= point (point-max))
+          (setq newlines nil)
+          (when (eq license-copyright-notice-position 'before)
+            (delete-char -2))))
+
+      (goto-char (point-max))
+
+      (when (eq license-copyright-notice-position 'after)
+        (when newlines
+          (insert "\n\n"))
+        (funcall license-copyright-notice-function))
 
       (goto-char (point-min))
       (while (re-search-forward "^$" nil t)

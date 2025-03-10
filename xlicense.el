@@ -73,6 +73,18 @@ CDR of each item is a filename of the license template")
     (copy-file (f-join djr-license-file-directory license)
                license-file-destination)
     (message "Created file %s (%s)" license-file-destination license)))
+
+;; These are defined as separate variables so that they can easily be changed
+;; just for licenses using local variables.
+(defvar license-user-full-name user-full-name
+  "The full name to use for licensing purposes.")
+
+(defvar license-user-mail-address user-mail-address
+  "The user mail address to use for licensing purposes.")
+
+(defvar license-organization nil
+  "The organization to use for licensing purposes.")
+
 (defvar license-default-summary
   "Description: "
   "Short description of what it does.")

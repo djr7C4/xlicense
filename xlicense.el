@@ -99,14 +99,12 @@ CDR of each item is a filename of the license template")
         (concat (file-name-as-directory license-directory) (cdr tp))
       tp)))
 
-(defvar license-keywords-alist '(("@author@" . user-full-name)
-                                 ("@email@" . user-email-address)
+(defvar license-keywords-alist '(("@author@" . license-user-full-name)
+                                 ("@email@" . license-user-mail-address)
                                  ("@year@" . (lambda ()
                                                (substring (current-time-string)
                                                           -4)))
-                                 ("@organization@" . 
-                                  (lambda ()
-                                    (getenv "ORGANIZATION"))))
+                                 ("@organization@" . license-organization))
   "Keywords that need to be substituted by `license-substitute-keywords'.
 
 The CAR of an item is a keyword and CDR is a replacement.  If the

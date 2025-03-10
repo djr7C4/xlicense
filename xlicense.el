@@ -24,8 +24,8 @@
 
 ;;; Code:
 
+(require 'cl)
 (require 'skeleton)
-;;(eval-when-compile (require 'cl))
 
 (defvar license-directory (concat
                            (file-name-directory load-file-name)

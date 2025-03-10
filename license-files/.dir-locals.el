@@ -1,0 +1,1 @@
+((nil . ((require-final-newline . nil)))) ;; We don't always want licenses to have a final newline.

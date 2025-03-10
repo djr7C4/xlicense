@@ -50,7 +50,9 @@
   "Alist of licenses.  CAR of each item is a symbol represents the license,
 CDR of each item is a filename of the license template")
 
-(defvar license--source-directory (file-name-directory (symbol-file 'license-types)))
+(defvar license--source-directory (file-name-directory (or buffer-file-name
+                                                           load-file-name
+                                                           (symbol-file 'license-types))))
 
 (defvar license-template-directories (list (expand-file-name "license-templates" license--source-directory))
   "Directory for license templates")

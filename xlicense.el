@@ -98,7 +98,7 @@ CDR of each item is a filename of the license template")
   "Short description of what it does.")
 
 (defvar license-copyright-notice-function (lambda ()
-                                            (insert (format "Copyright (C) %d, %s" (nth 5 (decode-time)) auth))
+                                            (insert (format "Copyright (C) %d %s" (nth 5 (decode-time)) auth))
                                             (if license-user-mail-address
                                                 (insert (format " <%s>" license-user-mail-address))))
   "Function to insert the copyright notice.")
